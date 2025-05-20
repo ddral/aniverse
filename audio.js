@@ -4,19 +4,25 @@ class AudioManager {
         this.backgroundMusic = document.getElementById('background-music');
         this.backgroundMusic.volume = 0.5;
         
-        // Sound effects
-        this.clickSound = new Audio('sound/click.mp3');
-        this.hoverSound = new Audio('sound/hover.mp3');
-        this.generatedSound = new Audio('sound/generated.mp3');
-        
-        // Set volumes for sound effects
-        this.clickSound.volume = 0.3;
-        this.hoverSound.volume = 0.2;
-        this.generatedSound.volume = 0.4;
+        // Sound effects with error handling
+        this.sounds = {
+            click: this.createSound('sound/click.mp3', 0.3),
+            hover: this.createSound('sound/hover.mp3', 0.2),
+            generated: this.createSound('sound/generated.mp3', 0.4)
+        };
         
         this.musicMuted = true;
         this.effectsMuted = false; // Unmuted by default
         this.setupEventListeners();
+    }
+
+    createSound(src, volume) {
+        const sound = new Audio(src);
+        sound.volume = volume;
+        sound.addEventListener('error', (e) => {
+            console.warn(`Failed to load sound: ${src}`, e);
+        });
+        return sound;
     }
 
     setupEventListeners() {
@@ -53,7 +59,7 @@ class AudioManager {
             } else {
                 icon.className = 'fas fa-bell';
                 // Play a sound to confirm
-                this.playSound(this.clickSound);
+                this.playSound(this.sounds.click);
             }
         });
 
@@ -61,28 +67,28 @@ class AudioManager {
         document.querySelectorAll('button').forEach(button => {
             button.addEventListener('click', (e) => {
                 // Don't play click sound for the effects toggle itself
-                if (button !== effectsToggle) this.playSound(this.clickSound);
+                if (button !== effectsToggle) this.playSound(this.sounds.click);
             });
-            button.addEventListener('mouseenter', () => this.playSound(this.hoverSound));
+            button.addEventListener('mouseenter', () => this.playSound(this.sounds.hover));
         });
 
         // Add sound effects to all select (dropdown) elements
         document.querySelectorAll('select').forEach(select => {
-            select.addEventListener('focus', () => this.playSound(this.hoverSound));
-            select.addEventListener('change', () => this.playSound(this.clickSound));
+            select.addEventListener('focus', () => this.playSound(this.sounds.hover));
+            select.addEventListener('change', () => this.playSound(this.sounds.click));
         });
 
         // Ensure watched list toggle button has sound effects
         const watchedToggle = document.getElementById('toggle-watched');
         if (watchedToggle) {
-            watchedToggle.addEventListener('click', () => this.playSound(this.clickSound));
-            watchedToggle.addEventListener('mouseenter', () => this.playSound(this.hoverSound));
+            watchedToggle.addEventListener('click', () => this.playSound(this.sounds.click));
+            watchedToggle.addEventListener('mouseenter', () => this.playSound(this.sounds.hover));
         }
 
         // Add generated sound to random button
         const randomBtn = document.getElementById('random-btn');
         if (randomBtn) {
-            randomBtn.addEventListener('click', () => this.playSound(this.generatedSound));
+            randomBtn.addEventListener('click', () => this.playSound(this.sounds.generated));
         }
 
         // Handle visibility change
@@ -109,11 +115,18 @@ class AudioManager {
     }
 
     playSound(sound) {
-        if (!this.effectsMuted) {
-            sound.currentTime = 0;
-            sound.play().catch(error => {
-                console.log('Sound effect playback prevented:', error);
-            });
+        if (!this.effectsMuted && sound) {
+            try {
+                sound.currentTime = 0;
+                const playPromise = sound.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.warn('Sound effect playback prevented:', error);
+                    });
+                }
+            } catch (error) {
+                console.warn('Error playing sound:', error);
+            }
         }
     }
 }

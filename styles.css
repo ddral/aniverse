@@ -88,7 +88,9 @@ header p {
 }
 
 .mode-btn {
-    padding: 0.9rem 2.2rem;
+    padding: 0.8rem 1.8rem;
+    font-size: 1rem;
+    min-width: 120px;
     border: none;
     border-radius: var(--border-radius);
     background: linear-gradient(135deg, 
@@ -96,7 +98,6 @@ header p {
         rgba(248, 249, 255, 0.95) 100%
     );
     cursor: pointer;
-    font-size: 1.1rem;
     font-weight: 600;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
@@ -442,12 +443,12 @@ header p {
 }
 
 .primary-btn, .secondary-btn {
-    padding: 1rem 2.2rem;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    min-width: 140px;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    font-size: 1.1rem;
-    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -775,19 +776,31 @@ header p {
     }
 
     .mode-btn {
-        padding: 0.8rem 1.8rem;
-        font-size: 1rem;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+        min-width: 100px;
     }
 
     .filters {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 0.8rem;
-        padding: 1.2rem;
+        padding: 1rem;
     }
 
     .filters select {
+        width: auto;
+        min-width: 140px;
+        max-width: 45%;
+    }
+
+    #region-filter-wrapper, #format-filter-wrapper {
+        width: 45%;
+    }
+
+    #region-filter-wrapper select, #format-filter-wrapper select {
         width: 100%;
-        min-width: unset;
     }
 
     .media-content {
@@ -860,16 +873,17 @@ header p {
     }
 
     .actions {
-        flex-direction: column;
-        gap: 1rem;
+        flex-direction: row;
+        gap: 0.8rem;
         width: 100%;
+        justify-content: center;
     }
 
     .primary-btn, .secondary-btn {
-        width: 100%;
-        justify-content: center;
-        padding: 0.9rem 1.5rem;
-        font-size: 1rem;
+        width: auto;
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
+        min-width: 120px;
     }
 
     .watched-section {
@@ -956,6 +970,24 @@ header p {
 
     .sound-toggle i, .effects-toggle i {
         font-size: 1.1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .actions {
+        flex-direction: column;
+    }
+
+    .primary-btn, .secondary-btn {
+        width: 100%;
+    }
+
+    .filters select {
+        max-width: 100%;
+    }
+
+    #region-filter-wrapper, #format-filter-wrapper {
+        width: 100%;
     }
 }
 

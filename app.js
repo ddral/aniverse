@@ -321,220 +321,270 @@ async function getRandomManga() {
     const status = statusFilter.value;
     const region = document.getElementById('region-filter').value;
     console.log('Fetching random manga with filters:', { genre, status, region });
-    // Map AniList status to MangaDex status for client-side filtering
-    const statusMap = {
-        'RELEASING': 'ongoing',
-        'FINISHED': 'completed',
-        'HIATUS': 'hiatus'
-    };
+    
     try {
-        // First, get the total count of manga (still needed for offset calculation)
+        // First, get the total count of manga
         const countResponse = await fetch(`${MANGA_API}/manga?limit=1`);
         if (!countResponse.ok) {
             throw new Error(`HTTP error! status: ${countResponse.status}`);
         }
         const countData = await countResponse.json();
         console.log('Manga count response:', countData);
+        
         if (!countData.total) {
             throw new Error('Could not get total manga count');
         }
+        
         const totalManga = countData.total;
         const randomOffset = Math.floor(Math.random() * Math.min(totalManga, 1000));
-        // Build params for initial fetch (without region or status)
+        
+        // Build params for initial fetch
         const params = new URLSearchParams({
             limit: 100,
-            offset: randomOffset
+            offset: randomOffset,
+            contentRating: ['safe', 'suggestive'],
+            order: { relevance: 'desc' }
         });
+        
         params.append('includes[]', 'cover_art');
         params.append('includes[]', 'author');
         params.append('includes[]', 'artist');
-        params.append('contentRating[]', 'safe');
+        
         if (genre && mangaTagMap[genre]) {
             params.append('includedTags[]', mangaTagMap[genre]);
         }
+        
         const fetchUrl = `${MANGA_API}/manga?${params}`;
-        console.log('Fetching manga from URL (without region or status filters):', fetchUrl);
+        console.log('Fetching manga from URL:', fetchUrl);
+        
         const response = await fetch(fetchUrl);
         if (!response.ok) {
             const errorText = await response.text();
             console.error('API Error Response:', errorText);
-            alert('Failed to fetch random manga. Please try again.');
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const data = await response.json();
         console.log('Manga API response:', data);
+        
         if (!data.data || !Array.isArray(data.data)) {
-             alert('No manga found for the selected filters.');
-             throw new Error('Invalid response format from MangaDex API');
+            throw new Error('Invalid response format from MangaDex API');
         }
+        
         let items = data.data;
-        console.log(`API returned ${items ? items.length : 0} items for selected filters:`, { genre });
-        // Client-side filtering by status if selected
-        if (status && statusMap[status]) {
-             const targetStatus = statusMap[status];
-             items = items.filter(item => item.attributes.status === targetStatus);
-             console.log(`Client-side filtered down to ${items.length} items for status: ${status}`);
+        console.log(`API returned ${items.length} items for selected filters:`, { genre });
+        
+        // Filter out items without required data
+        items = items.filter(item => {
+            const hasTitle = item.attributes?.title?.en;
+            const hasCover = item.relationships?.some(r => r.type === 'cover_art');
+            const hasDescription = item.attributes?.description?.en;
+            return hasTitle && hasCover && hasDescription;
+        });
+        
+        console.log(`Filtered to ${items.length} valid items`);
+        
+        if (items.length === 0) {
+            throw new Error('No valid manga found after filtering');
         }
-        // Client-side filtering by region if selected
-        if (region) {
-            const langMap = { JP: 'ja', KR: 'ko', CN: 'zh' };
-            const targetLang = langMap[region];
-            if (targetLang) {
-                items = items.filter(item => item.attributes.originalLanguage === targetLang);
-                console.log(`Client-side filtered down to ${items.length} items for region: ${region}`);
-            }
-        }
-        if (!items || items.length === 0) {
-            alert('No manga found for the selected filters.');
-            throw new Error('No manga found after filtering');
-        }
+        
         return items[Math.floor(Math.random() * items.length)];
     } catch (error) {
         console.error('Error fetching random manga:', error);
-        alert('An error occurred while fetching manga. Please try again.');
+        alert('Failed to fetch manga. Please try again.');
         throw error;
     }
 }
 
 function displayItem(item) {
     if (!item) return;
-    const title = currentMode === 'anime' 
-        ? item.title.english || item.title.romaji
-        : item.attributes.title.en;
-    const originalTitle = currentMode === 'anime'
-        ? item.title.native
-        : item.attributes.title[item.attributes.originalLanguage] || null;
-    const description = currentMode === 'anime'
-        ? item.description
-        : item.attributes.description.en;
-    const coverImage = currentMode === 'anime'
-        ? item.coverImage.large
-        : item.relationships.find(r => r.type === 'cover_art')?.attributes?.fileName;
-
-    // Update title and original title
-    document.getElementById('title').textContent = title;
-    const originalTitleElement = document.getElementById('original-title');
-    if (originalTitle && originalTitle !== title) {
-        originalTitleElement.textContent = originalTitle;
-        originalTitleElement.style.display = 'block';
-    } else {
-        originalTitleElement.style.display = 'none';
-    }
-
-    document.getElementById('description').innerHTML = description || 'No description available';
-    document.getElementById('cover-image').src = currentMode === 'anime' 
-        ? coverImage 
-        : `https://uploads.mangadex.org/covers/${item.id}/${coverImage}`;
-    const tagsContainer = document.getElementById('tags');
-    tagsContainer.innerHTML = '';
-    const genres = currentMode === 'anime' 
-        ? item.genres 
-        : item.attributes.tags.map(tag => tag.attributes.name.en);
-    genres.forEach(genre => {
-        const tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.textContent = genre;
-        tagsContainer.appendChild(tag);
-    });
     
-    // Update rating and status
-    const ratingElement = document.getElementById('rating');
-    const statusElement = document.getElementById('status').querySelector('span');
-    const statusIcon = document.getElementById('status').querySelector('i');
+    try {
+        const title = currentMode === 'anime' 
+            ? item.title.english || item.title.romaji
+            : item.attributes.title.en;
+        const originalTitle = currentMode === 'anime'
+            ? item.title.native
+            : item.attributes.title[item.attributes.originalLanguage] || null;
+        const description = currentMode === 'anime'
+            ? item.description
+            : item.attributes.description.en;
+        const coverImage = currentMode === 'anime'
+            ? item.coverImage.large
+            : item.relationships.find(r => r.type === 'cover_art')?.attributes?.fileName;
 
-    if (currentMode === 'anime') {
-        ratingElement.style.display = 'flex';
-        ratingElement.querySelector('span').textContent = (item.averageScore / 10).toFixed(1);
-        statusElement.textContent = item.status;
-        statusIcon.className = 'fas fa-circle';
-        statusIcon.style.color = '#5cb85c'; // Default green
-    } else {
-        // Hide rating for manga
-        ratingElement.style.display = 'none';
+        // Update title and original title
+        const titleElement = document.getElementById('title');
+        const originalTitleElement = document.getElementById('original-title');
+        const descriptionElement = document.getElementById('description');
+        const coverImageElement = document.getElementById('cover-image');
+        const tagsContainer = document.getElementById('tags');
+
+        if (titleElement) titleElement.textContent = title || 'Title not available';
         
-        // Manga status with colored dots
-        const status = item.attributes.status;
-        statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        statusIcon.className = 'fas fa-circle';
+        if (originalTitleElement) {
+            if (originalTitle && originalTitle !== title) {
+                originalTitleElement.textContent = originalTitle;
+                originalTitleElement.style.display = 'block';
+            } else {
+                originalTitleElement.style.display = 'none';
+            }
+        }
+
+        if (descriptionElement) {
+            descriptionElement.innerHTML = description || 'No description available';
+        }
+
+        if (coverImageElement) {
+            coverImageElement.src = currentMode === 'anime' 
+                ? coverImage 
+                : `https://uploads.mangadex.org/covers/${item.id}/${coverImage}`;
+            coverImageElement.alt = title || 'Cover Image';
+        }
+
+        if (tagsContainer) {
+            tagsContainer.innerHTML = '';
+            const genres = currentMode === 'anime' 
+                ? item.genres 
+                : item.attributes.tags.map(tag => tag.attributes.name.en);
+            
+            if (genres && genres.length > 0) {
+                genres.forEach(genre => {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.textContent = genre;
+                    tagsContainer.appendChild(tag);
+                });
+            }
+        }
         
-        // Set color based on status
-        switch(status) {
-            case 'ongoing':
-                statusIcon.style.color = '#ffc107'; // Yellow
-                break;
-            case 'completed':
-                statusIcon.style.color = '#5cb85c'; // Green
-                break;
-            case 'cancelled':
-                statusIcon.style.color = '#dc3545'; // Red
-                break;
-            case 'hiatus':
-                statusIcon.style.color = '#6c757d'; // Gray
-                break;
-            default:
+        // Update rating and status
+        const ratingElement = document.getElementById('rating');
+        const statusElement = document.getElementById('status')?.querySelector('span');
+        const statusIcon = document.getElementById('status')?.querySelector('i');
+
+        if (currentMode === 'anime') {
+            if (ratingElement) {
+                ratingElement.style.display = 'flex';
+                const ratingSpan = ratingElement.querySelector('span');
+                if (ratingSpan) {
+                    ratingSpan.textContent = item.averageScore ? (item.averageScore / 10).toFixed(1) : 'N/A';
+                }
+            }
+            
+            if (statusElement) {
+                statusElement.textContent = item.status || 'Unknown';
+            }
+            
+            if (statusIcon) {
+                statusIcon.className = 'fas fa-circle';
                 statusIcon.style.color = '#5cb85c'; // Default green
+            }
+        } else {
+            // Hide rating for manga
+            if (ratingElement) {
+                ratingElement.style.display = 'none';
+            }
+            
+            // Manga status with colored dots
+            if (statusElement && statusIcon) {
+                const status = item.attributes.status;
+                statusElement.textContent = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+                statusIcon.className = 'fas fa-circle';
+                
+                // Set color based on status
+                switch(status) {
+                    case 'ongoing':
+                        statusIcon.style.color = '#ffc107'; // Yellow
+                        break;
+                    case 'completed':
+                        statusIcon.style.color = '#5cb85c'; // Green
+                        break;
+                    case 'cancelled':
+                        statusIcon.style.color = '#dc3545'; // Red
+                        break;
+                    case 'hiatus':
+                        statusIcon.style.color = '#6c757d'; // Gray
+                        break;
+                    default:
+                        statusIcon.style.color = '#5cb85c'; // Default green
+                }
+            }
         }
-    }
 
-    // Add extra info based on mode
-    let extraInfo = '';
-    if (currentMode === 'anime') {
-        let year = 'Unknown';
-        if (item.startDate && typeof item.startDate.year === 'number' && item.startDate.year > 1900) {
-            year = item.startDate.year;
+        // Add extra info based on mode
+        let extraInfo = '';
+        if (currentMode === 'anime') {
+            let year = 'Unknown';
+            if (item.startDate && typeof item.startDate.year === 'number' && item.startDate.year > 1900) {
+                year = item.startDate.year;
+            }
+            let format = 'Unknown';
+            if (item.format) {
+                format = item.format === 'TV' ? 'TV Series' : (item.format === 'MOVIE' ? 'Movie' : item.format.replace('_', ' '));
+            }
+            let country = 'Unknown';
+            if (item.countryOfOrigin && typeof item.countryOfOrigin === 'string' && item.countryOfOrigin.length === 2) {
+                country = item.countryOfOrigin;
+            }
+            extraInfo = `<div class="extra-info">
+                <span title="Year"><strong>Year:</strong> ${year}</span>
+                <span title="Format"><strong>Format:</strong> ${format}</span>
+                <span title="Country"><strong>Country:</strong> ${country}</span>
+            </div>`;
+        } else {
+            // Manga extra info
+            const authors = item.relationships
+                ?.filter(r => r.type === 'author')
+                .map(r => r.attributes?.name || 'Unknown')
+                .join(', ') || 'Unknown';
+            
+            const artists = item.relationships
+                ?.filter(r => r.type === 'artist')
+                .map(r => r.attributes?.name || 'Unknown')
+                .join(', ') || 'Unknown';
+
+            const year = item.attributes?.year || 'Unknown';
+            const contentRating = item.attributes?.contentRating 
+                ? item.attributes.contentRating.charAt(0).toUpperCase() + item.attributes.contentRating.slice(1)
+                : 'Unknown';
+            
+            // Map language codes to country codes
+            const languageToCountry = {
+                'ja': 'JP',
+                'ko': 'KR',
+                'zh': 'CN'
+            };
+            const country = languageToCountry[item.attributes?.originalLanguage] || 'Unknown';
+
+            extraInfo = `<div class="extra-info">
+                <span title="Author"><strong>Author:</strong> ${authors}</span>
+                <span title="Artist"><strong>Artist:</strong> ${artists}</span>
+                <span title="Year"><strong>Year:</strong> ${year}</span>
+                <span title="Country"><strong>Country:</strong> ${country}</span>
+                <span title="Content Rating"><strong>Rating:</strong> ${contentRating}</span>
+            </div>`;
         }
-        let format = 'Unknown';
-        if (item.format) {
-            format = item.format === 'TV' ? 'TV Series' : (item.format === 'MOVIE' ? 'Movie' : item.format.replace('_', ' '));
-        }
-        let country = 'Unknown';
-        if (item.countryOfOrigin && typeof item.countryOfOrigin === 'string' && item.countryOfOrigin.length === 2) {
-            country = item.countryOfOrigin;
-        }
-        extraInfo = `<div class="extra-info">
-            <span title="Year"><strong>Year:</strong> ${year}</span>
-            <span title="Format"><strong>Format:</strong> ${format}</span>
-            <span title="Country"><strong>Country:</strong> ${country}</span>
-        </div>`;
-    } else {
-        // Manga extra info
-        const authors = item.relationships
-            .filter(r => r.type === 'author')
-            .map(r => r.attributes?.name || 'Unknown')
-            .join(', ');
+
+        // Remove any existing extra-info div
+        const oldExtra = document.querySelector('.extra-info');
+        if (oldExtra) oldExtra.remove();
         
-        const artists = item.relationships
-            .filter(r => r.type === 'artist')
-            .map(r => r.attributes?.name || 'Unknown')
-            .join(', ');
-
-        const year = item.attributes.year || 'Unknown';
-        const contentRating = item.attributes.contentRating.charAt(0).toUpperCase() + item.attributes.contentRating.slice(1);
+        // Insert extra info below the tags
+        if (extraInfo && tagsContainer) {
+            tagsContainer.insertAdjacentHTML('afterend', extraInfo);
+        }
         
-        // Map language codes to country codes
-        const languageToCountry = {
-            'ja': 'JP',
-            'ko': 'KR',
-            'zh': 'CN'
-        };
-        const country = languageToCountry[item.attributes.originalLanguage] || 'Unknown';
-
-        extraInfo = `<div class="extra-info">
-            <span title="Author"><strong>Author:</strong> ${authors || 'Unknown'}</span>
-            <span title="Artist"><strong>Artist:</strong> ${artists || 'Unknown'}</span>
-            <span title="Year"><strong>Year:</strong> ${year}</span>
-            <span title="Country"><strong>Country:</strong> ${country}</span>
-            <span title="Content Rating"><strong>Rating:</strong> ${contentRating}</span>
-        </div>`;
+        const mediaContent = document.querySelector('.media-content');
+        if (mediaContent) {
+            mediaContent.classList.remove('hidden');
+        }
+        
+        updateWatchedButton();
+    } catch (error) {
+        console.error('Error displaying item:', error);
+        alert('Error displaying item information. Please try again.');
     }
-
-    // Remove any existing extra-info div
-    const oldExtra = document.querySelector('.extra-info');
-    if (oldExtra) oldExtra.remove();
-    // Insert extra info below the tags
-    if (extraInfo) tagsContainer.insertAdjacentHTML('afterend', extraInfo);
-    mediaContent.classList.remove('hidden');
-    updateWatchedButton();
 }
 
 function toggleWatched() {
