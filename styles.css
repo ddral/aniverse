@@ -270,6 +270,10 @@ header p {
 .media-info {
     flex: 1;
     padding: 1.5rem 0;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .media-info h2 {
@@ -284,6 +288,9 @@ header p {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .media-info p {
@@ -293,6 +300,9 @@ header p {
     line-height: 1.9;
     text-align: justify;
     font-weight: 400;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .original-title {
@@ -308,6 +318,9 @@ header p {
     opacity: 0.9;
     transition: all 0.4s ease;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .original-title:hover {
@@ -365,6 +378,7 @@ header p {
     border: 1px solid rgba(122, 82, 242, 0.15);
     box-shadow: 0 5px 20px rgba(122, 82, 242, 0.08);
     backdrop-filter: blur(5px);
+    max-width: 100%;
 }
 
 .extra-info span {
@@ -377,6 +391,8 @@ header p {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(122, 82, 242, 0.1);
+    flex-wrap: wrap;
+    max-width: 100%;
 }
 
 .extra-info span strong {
@@ -384,6 +400,7 @@ header p {
     font-weight: 700;
     letter-spacing: 0.3px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+    margin-right: 0.3rem;
 }
 
 .extra-info span:hover {
@@ -809,6 +826,8 @@ header p {
         text-align: center;
         padding: 1.5rem;
         gap: 1.5rem;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .media-content img {
@@ -821,22 +840,26 @@ header p {
     .media-info {
         width: 100%;
         padding: 0;
+        text-align: left;
     }
 
     .media-info h2 {
         font-size: 1.8rem;
         text-align: center;
+        padding: 0 1rem;
     }
 
     .media-info p {
         font-size: 1rem;
         text-align: left;
         line-height: 1.6;
+        padding: 0 0.5rem;
     }
 
     .original-title {
         text-align: center;
         font-size: 1.1em;
+        padding: 0 1rem;
     }
 
     .tags {
@@ -853,11 +876,15 @@ header p {
         justify-content: center;
         gap: 1rem;
         padding: 1rem;
+        margin: 1rem 0.5rem;
     }
 
     .extra-info span {
         padding: 0.3rem 0.8rem;
         font-size: 0.9rem;
+        flex: 1 1 auto;
+        min-width: 140px;
+        max-width: calc(50% - 1rem);
     }
 
     .stats {
@@ -988,6 +1015,21 @@ header p {
 
     #region-filter-wrapper, #format-filter-wrapper {
         width: 100%;
+    }
+
+    .media-info h2 {
+        font-size: 1.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .media-info p {
+        font-size: 0.95rem;
+        padding: 0 0.3rem;
+    }
+
+    .extra-info span {
+        max-width: 100%;
+        justify-content: center;
     }
 }
 
