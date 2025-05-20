@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AniVerse - Anime & Manga Discovery</title>
+    <link rel="icon" type="image/png" href="icon/icon.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans+KR:wght@400;500&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AniVerse</h1>
+            <p>Discover your next favorite anime or manga</p>
+        </header>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="anime">Anime</button>
+            <button class="mode-btn" data-mode="manga">Manga</button>
+        </div>
+
+        <div class="filters">
+            <select id="genre-filter">
+                <option value="">Surprise me!</option>
+                <!-- Genres will be populated dynamically -->
+            </select>
+            <select id="status-filter">
+                <option value="">Surprise me!</option>
+                <option value="FINISHED">Finished</option>
+                <option value="RELEASING">Releasing</option>
+            </select>
+            <div id="format-filter-wrapper">
+                <select id="format-filter">
+                    <option value="">Surprise me!</option>
+                    <option value="TV">TV Series</option>
+                    <option value="MOVIE">Movie</option>
+                </select>
+            </div>
+            <div id="region-filter-wrapper">
+                <select id="region-filter">
+                    <option value="">Surprise me!</option>
+                    <option value="JP">Japan</option>
+                    <option value="KR">Korea</option>
+                    <option value="CN">China</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="result-card">
+                <div class="loading-spinner hidden">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="media-content hidden">
+                    <img id="cover-image" src="" alt="Cover Image">
+                    <div class="media-info">
+                        <h2 id="title">Title will appear here</h2>
+                        <p id="original-title" class="original-title">Original title will appear here</p>
+                        <p id="description">Description will appear here</p>
+                        <div class="tags" id="tags"></div>
+                        <div class="stats">
+                            <span id="rating"><i class="fas fa-star"></i> <span>0</span></span>
+                            <span id="status"><i class="fas fa-circle"></i> <span>Unknown</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="random-btn" class="primary-btn">
+                    <i class="fas fa-random"></i> Get Random
+                </button>
+                <button id="watched-btn" class="secondary-btn">
+                    <i class="far fa-check-circle"></i> Mark as Watched
+                </button>
+            </div>
+        </div>
+
+        <div class="watched-section">
+            <div class="watched-header">
+                <h2>Watched List <span id="watched-count" class="watched-count">0</span></h2>
+                <button id="toggle-watched" class="toggle-btn">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div id="watched-list" class="watched-grid collapsed">
+                <!-- Watched items will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="audio.js"></script>
+    <audio id="background-music" loop muted>
+        <source src="sound/background.mp3" type="audio/mpeg">
+    </audio>
+    <button id="sound-toggle" class="sound-toggle" title="Toggle Background Music">
+        <i class="fas fa-volume-mute"></i>
+    </button>
+    <button id="effects-toggle" class="effects-toggle" title="Toggle Sound Effects">
+        <i class="fas fa-bell-slash"></i>
+    </button>
+</body>
+</html> 
